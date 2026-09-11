@@ -1,0 +1,133 @@
+name: Build Flutter Desktop Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  build-linux:
+    name: Build Linux amd64
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Enable Linux desktop
+        run: flutter config --enable-linux-desktop
+
+      - name: Build Linux
+        run: flutter build linux --release
+
+      - name: Create archive
+        run: |
+          VERSION="${GITHUB_REF_NAME}"
+          ARCHIVE="html-cleaner-flutter-${VERSION}-linux-amd64.tar.gz"
+
+          cd build/linux/x64/release/bundle
+          tar -czf "../../../../../${ARCHIVE}" .
+
+      - name: Upload Linux release asset
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload \
+            "${{ github.event.release.tag_name }}" \
+            "html-cleaner-flutter-${{ github.event.release.tag_name }}-linux-amd64.tar.gz" \
+            --clobber
+
+
+  build-windows:
+    name: Build Windows amd64
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Enable Windows desktop
+        run: flutter config --enable-windows-desktop
+
+      - name: Build Windows
+        run: flutter build windows --release
+
+      - name: Create archive
+        shell: pwsh
+        run: |
+          $version = "${{ github.ref_name }}"
+          $archive = "html-cleaner-flutter-${version}-windows-amd64.zip"
+
+          Compress-Archive `
+            -Path build/windows/x64/runner/Release/* `
+            -DestinationPath $archive
+
+      - name: Upload Windows release asset
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload `
+            "${{ github.event.release.tag_name }}" `
+            "html-cleaner-flutter-${{ github.event.release.tag_name }}-windows-amd64.zip" `
+            --clobber
+
+
+  build-macos:
+    name: Build macOS Intel
+    runs-on: macos-13
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Enable macOS desktop
+        run: flutter config --enable-macos-desktop
+
+      - name: Build macOS Intel
+        run: flutter build macos --release --target-platform darwin-x64
+
+      - name: Create archive
+        run: |
+          VERSION="${GITHUB_REF_NAME}"
+          ARCHIVE="html-cleaner-flutter-${VERSION}-macos-intel.zip"
+
+          cd build/macos/Build/Products/Release
+          zip -r "../../../../../${ARCHIVE}" *.app
+
+      - name: Upload macOS release asset
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload \
+            "${{ github.event.release.tag_name }}" \
+            "html-cleaner-flutter-${{ github.event.release.tag_name }}-macos-intel.zip" \
+            --clobber
