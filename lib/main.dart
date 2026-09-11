@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:syntax_highlight/syntax_highlight.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:desktop_drop/desktop_drop.dart';
+import 'package:window_manager/window_manager.dart';
+
 
 late final Highlighter htmlDarkHighlighter;
 late final Highlighter htmlLightHighlighter;
@@ -18,6 +20,21 @@ Future<void> main() async {
   htmlDarkHighlighter = Highlighter(language: 'html', theme: darkTheme);
 
   htmlLightHighlighter = Highlighter(language: 'html', theme: lightTheme);
+
+
+  const windowOptions = WindowOptions(
+    size: Size(1200, 800),
+    minimumSize: Size(1000, 700),
+    center: true,
+  );
+
+  windowManager.waitUntilReadyToShow(
+    windowOptions,
+        () async {
+      await windowManager.show();
+      await windowManager.focus();
+    },
+  );
 
   runApp(const MyApp());
 }

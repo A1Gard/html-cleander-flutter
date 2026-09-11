@@ -5,7 +5,9 @@
 list(APPEND FLUTTER_PLUGIN_LIST
   desktop_drop
   irondash_engine_context
+  screen_retriever_linux
   super_native_extensions
+  window_manager
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST
