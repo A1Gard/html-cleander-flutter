@@ -1,8 +1,9 @@
 name: Build Flutter Desktop Release
 
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - 'v*'
 
 permissions:
   contents: write
@@ -36,16 +37,21 @@ jobs:
           VERSION="${GITHUB_REF_NAME}"
           ARCHIVE="html-cleaner-flutter-${VERSION}-linux-amd64.tar.gz"
 
-          cd build/linux/x64/release/bundle
-          tar -czf "../../../../../${ARCHIVE}" .
+          tar -czf "${ARCHIVE}" \
+            -C build/linux/x64/release/bundle .
 
-      - name: Upload Linux release asset
+      - name: Upload Linux asset
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            --title "${GITHUB_REF_NAME}" \
+            --generate-notes \
+            || true
+
           gh release upload \
-            "${{ github.event.release.tag_name }}" \
-            "html-cleaner-flutter-${{ github.event.release.tag_name }}-linux-amd64.tar.gz" \
+            "${GITHUB_REF_NAME}" \
+            "html-cleaner-flutter-${GITHUB_REF_NAME}-linux-amd64.tar.gz" \
             --clobber
 
 
@@ -82,13 +88,18 @@ jobs:
             -Path build/windows/x64/runner/Release/* `
             -DestinationPath $archive
 
-      - name: Upload Windows release asset
+      - name: Upload Windows asset
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          gh release create "${{ github.ref_name }}" `
+            --title "${{ github.ref_name }}" `
+            --generate-notes `
+            2>$null
+
           gh release upload `
-            "${{ github.event.release.tag_name }}" `
-            "html-cleaner-flutter-${{ github.event.release.tag_name }}-windows-amd64.zip" `
+            "${{ github.ref_name }}" `
+            "html-cleaner-flutter-${{ github.ref_name }}-windows-amd64.zip" `
             --clobber
 
 
@@ -123,11 +134,16 @@ jobs:
           cd build/macos/Build/Products/Release
           zip -r "../../../../../${ARCHIVE}" *.app
 
-      - name: Upload macOS release asset
+      - name: Upload macOS asset
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            --title "${GITHUB_REF_NAME}" \
+            --generate-notes \
+            || true
+
           gh release upload \
-            "${{ github.event.release.tag_name }}" \
-            "html-cleaner-flutter-${{ github.event.release.tag_name }}-macos-intel.zip" \
+            "${GITHUB_REF_NAME}" \
+            "html-cleaner-flutter-${GITHUB_REF_NAME}-macos-intel.zip" \
             --clobber
